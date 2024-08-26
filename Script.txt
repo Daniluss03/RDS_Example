@@ -1,0 +1,121 @@
+SELECT DATABASE();
+USE backend;
+SHOW TABLES;
+
+CREATE TABLE IF NOT EXISTS Usuarios (
+    id INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(50),
+    email VARCHAR(50),
+    rol VARCHAR(50),
+    estado BOOLEAN,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS Ventas (
+    id INT NOT NULL AUTO_INCREMENT,
+    usuario_id INT,
+    fechaventa DATE,
+    totalventa DOUBLE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (usuario_id) REFERENCES Usuarios(id)
+);
+
+CREATE TABLE IF NOT EXISTS Productos (
+    id INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(100), -- Adjusted length for a reasonable VARCHAR size
+    precio DOUBLE,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS VentasProductos (
+    id INT NOT NULL AUTO_INCREMENT,
+    idproductos INT,
+    idventas INT,
+    PRIMARY KEY (id),
+    FOREIGN KEY (idproductos) REFERENCES Productos(id),
+    FOREIGN KEY (idventas) REFERENCES Ventas(id)
+);
+-- Insertar datos en la tabla Usuarios
+INSERT INTO Usuarios (nombre, email, rol, estado) VALUES
+('Juan Pérez', 'juan.perez@example.com', 'Administrador', TRUE),
+('Ana Gómez', 'ana.gomez@example.com', 'Vendedor', TRUE),
+('Carlos López', 'carlos.lopez@example.com', 'Vendedor', FALSE);
+
+-- Insertar datos en la tabla Productos
+INSERT INTO Productos (nombre, precio) VALUES
+('Laptop', 1200.00),
+('Smartphone', 800.00),
+('Tableta', 300.00),
+('Auriculares', 150.00);
+
+-- Insertar datos en la tabla Ventas
+INSERT INTO Ventas (usuario_id, fechaventa, totalventa) VALUES
+(1, '2024-08-01', 2000.00), -- Venta realizada por Juan Pérez
+(2, '2024-08-15', 800.00),  -- Venta realizada por Ana Gómez
+(2, '2024-08-20', 300.00),  -- Otra venta realizada por Ana Gómez
+(3, '2024-08-25', 450.00);  -- Venta realizada por Carlos López
+
+-- Insertar datos en la tabla VentasProductos
+-- Supongamos que la venta 1 incluye 1 Laptop y 1 Auriculares
+INSERT INTO VentasProductos (idproductos, idventas) VALUES
+(1, 1),  -- Laptop en la venta 1
+(4, 1),  -- Auriculares en la venta 1
+
+-- Supongamos que la venta 2 incluye 1 Smartphone
+(2, 2),  -- Smartphone en la venta 2
+
+-- Supongamos que la venta 3 incluye 1 Tableta
+(3, 3);  -- Tableta en la venta 3
+
+
+SELECT u.id AS usuario_id, 
+       u.nombre AS nombre_usuario, 
+       SUM(v.totalventa) AS total_ventas
+FROM Ventas v
+JOIN Usuarios u ON v.usuario_id = u.id
+GROUP BY u.id, u.nombre;
+
+SELECT p.id AS producto_id,
+       p.nombre AS nombventasproductosre_producto,
+       SUM(v.totalventa) AS total_ventas
+FROM Ventas v
+JOIN VentasProductos vp ON v.id = vp.idventas
+JOIN Productos p ON vp.idproductos = p.id
+GROUP BY p.id, p.nombre;
+
+SELECT AVG(daily_total) AS promedio_diario
+FROM (
+    SELECT v.fechaventa,
+           SUM(v.totalventa) AS daily_total
+    FROM Ventas v
+    GROUP BY v.fechaventa
+) AS daily_totals;
+
+
+SELECT u.id AS usuario_id,
+       u.nombre AS nombre_usuario,
+       COUNT(v.id) AS numero_compras
+FROM Usuarios u
+JOIN Ventas v ON u.id = v.usuario_id
+WHERE v.fechaventa >= CURDATE() - INTERVAL 1 MONTH
+GROUP BY u.id, u.nombre
+HAVING COUNT(v.id) > 5;
+
+UPDATE Usuarios
+SET nombre = 'Juan Pérez',
+    rol = 'Administrador',
+    estado = TRUE
+WHERE id = 1;
+UPDATE Usuarios
+SET nombre = 'Juan rincon',
+    rol = 'vendedor',
+    estado = TRUE
+WHERE id = 2;
+UPDATE Usuarios
+SET nombre = 'Danilo rincon',
+    rol = 'vendedor',
+    estado = TRUE
+WHERE id = 3;
+
+
+select * from ventas
